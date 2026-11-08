@@ -20,6 +20,10 @@ Na telefonie i w przeglądarce (gdzie aplikacja nie rysuje paska nad polem czatu
 
 Limity pojawiają się po pierwszej odpowiedzi modelu w sesji (tylko przy subskrypcji).
 
+## Linijka statusu w każdej odpowiedzi
+
+Aplikacje Claude (desktop, telefon, przeglądarka) nie rysują elementów wtyczek w sesjach w chmurze. Dlatego wtyczka ma też skill `status`: do każdej wiadomości dołącza aktualne dane, a Claude kończy każdą odpowiedź jedną linijką statusu. Ta linijka jest widoczna wszędzie. Na prośbę („status”, „pasek”, `/status-bar:status`) Claude rozpisuje status jako listę.
+
 ## Instalacja
 
 W terminalu, w sesji Claude Code:
