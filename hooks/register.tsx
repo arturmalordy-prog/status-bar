@@ -6,6 +6,46 @@ import type { BandInfo, Limit } from '../types'
 const info = atom({ plugin: 'status-bar', key: 'info' } as const, null)
 const isHidden = atom({ plugin: 'status-bar', key: 'isHidden' } as const, false)
 const warned = atom({ plugin: 'status-bar', key: 'warned' } as const, [])
+const row = atom({ plugin: 'status-bar', key: 'row' } as const, 0)
+
+const PANE = 'status-bar'
+// Surfaces that draw the band above the prompt; the others get a transcript row.
+const BAND_SURFACES = ['terminal', 'desktop']
+
+type Item = { key: string; text: string; color: string }
+
+function barItems(band: BandInfo, now: number): Item[] {
+  const pct = (l?: Limit) => (l ? `${Math.round(l.percentUsed)}%${resetIn(l.resetsAt, now)}` : '—')
+  const items: Item[] = [
+    { key: 's', text: `${levelIcon(band.session?.percentUsed)} 5h ${pct(band.session)}`, color: levelColor(band.session?.percentUsed) },
+    { key: 'w', text: `📅 Tydz. ${pct(band.weekly)}`, color: levelColor(band.weekly?.percentUsed) },
+    { key: 'c', text: `🧠 Kontekst ${band.contextPercent === undefined ? '—' : `${band.contextPercent}%`}`, color: levelColor(band.contextPercent) },
+    { key: 'e', text: `${band.isRemote ? '☁️' : '💻'} ${band.environment}`, color: 'suggestion' },
+  ]
+  if (band.repo) {
+    items.push({ key: 'g', text: `🌿 ${band.repo}${band.branch ? ` · ${band.branch}` : ''}`, color: 'diffAdded' })
+  }
+  items.push({ key: 'm', text: `🤖 ${band.model}${band.effort ? ` ⚡${band.effort}` : ''}`, color: 'claude' })
+  if (band.startedAt !== undefined) {
+    const minutes = Math.max(0, Math.round((now - band.startedAt) / 60000))
+    items.push({ key: 't', text: `⏱️ ${duration(minutes)} · 💬 ${band.messages ?? 0}`, color: 'text' })
+  }
+  if (band.lastTurn) {
+    items.push({ key: 'l', text: `🔄 ${band.lastTurn.seconds}s · 🔧 ${band.lastTurn.tools}`, color: 'text' })
+  }
+  if (band.background) {
+    items.push({ key: 'b', text: `⚙️ ${band.background} w tle`, color: 'warning' })
+  }
+  return items
+}
+
+async function placeRow($: EngineInterface): Promise<void> {
+  const surfaces = await $.session.surfaces()
+  if (!surfaces.some(s => !BAND_SURFACES.includes(s))) return
+  const n = (await read($, row)) + 1
+  await update($, row, () => n)
+  await $.ui.place({ id: `bar-${n}` })
+}
 
 const WARN_AT = 70
 const ALERT_AT = 90
@@ -108,13 +148,20 @@ export const register: Register = on => {
 
   on('session.start', async ($, e, next) => {
     const result = await next(e)
+    await $.command.register({ name: 'pasek', description: 'Pokaż pasek status-bar w panelu' })
     await refresh($, {
       model: await $.session.model(),
       effort: await $.env.get('CLAUDE_EFFORT'),
       ...(await environmentInfo($)),
       ...(await gitInfo($)),
     })
+    await placeRow($)
     return result
+  })
+
+  on('command.run', { command: 'pasek' }, async $ => {
+    const opened = await $.ui.open({ id: PANE, title: '📊 Status bar' })
+    return { text: opened.isPlaced ? 'Pasek otwarty w panelu.' : 'Panel czeka na miejsce na ekranie.' }
   })
 
   on('turn.start', async ($, e, next) => {
@@ -146,6 +193,7 @@ export const register: Register = on => {
     if (e.agentId === undefined && turnStartedAt > 0) {
       const seconds = Math.round(((await $.clock.now()) - turnStartedAt) / 1000)
       await refresh($, { lastTurn: { seconds, tools: turnTools }, ...(await gitInfo($)) })
+      await placeRow($)
     } else {
       await refresh($, {})
     }
@@ -180,28 +228,7 @@ export const register: Register = on => {
       )
     }
 
-    const now = await $.clock.now()
-    const pct = (l?: Limit) => (l ? `${Math.round(l.percentUsed)}%${resetIn(l.resetsAt, now)}` : '—')
-    const items: { key: string; text: string; color: string }[] = [
-      { key: 's', text: `${levelIcon(band.session?.percentUsed)} 5h ${pct(band.session)}`, color: levelColor(band.session?.percentUsed) },
-      { key: 'w', text: `📅 Tydz. ${pct(band.weekly)}`, color: levelColor(band.weekly?.percentUsed) },
-      { key: 'c', text: `🧠 Kontekst ${band.contextPercent === undefined ? '—' : `${band.contextPercent}%`}`, color: levelColor(band.contextPercent) },
-      { key: 'e', text: `${band.isRemote ? '☁️' : '💻'} ${band.environment}`, color: 'suggestion' },
-    ]
-    if (band.repo) {
-      items.push({ key: 'g', text: `🌿 ${band.repo}${band.branch ? ` · ${band.branch}` : ''}`, color: 'diffAdded' })
-    }
-    items.push({ key: 'm', text: `🤖 ${band.model}${band.effort ? ` ⚡${band.effort}` : ''}`, color: 'claude' })
-    if (band.startedAt !== undefined) {
-      const minutes = Math.max(0, Math.round((now - band.startedAt) / 60000))
-      items.push({ key: 't', text: `⏱️ ${duration(minutes)} · 💬 ${band.messages ?? 0}`, color: 'text' })
-    }
-    if (band.lastTurn) {
-      items.push({ key: 'l', text: `🔄 ${band.lastTurn.seconds}s · 🔧 ${band.lastTurn.tools}`, color: 'text' })
-    }
-    if (band.background) {
-      items.push({ key: 'b', text: `⚙️ ${band.background} w tle`, color: 'warning' })
-    }
+    const items = barItems(band, await $.clock.now())
 
     return (
       <Box flexDirection="row" flexWrap="wrap" columnGap={2} paddingX={1} backgroundColor={background} alignItems="center">
@@ -211,6 +238,43 @@ export const register: Register = on => {
           </Text>
         ))}
         <Button key="hide" label="✕ Ukryj" onPress={() => update($, isHidden, () => true)} />
+      </Box>
+    )
+  })
+
+  on('ui.render', { component: 'Placed' }, async ($, e, next) => {
+    if (e.props.plugin !== 'status-bar' || BAND_SURFACES.includes(e.surface)) return next(e)
+    const band = await read($, info)
+    const latest = await read($, row)
+    if (band === null || e.props.id !== `bar-${latest}`) return next(e)
+
+    const { Box, Text } = $.ui.resolve(e)
+    const items = barItems(band, await $.clock.now())
+
+    return (
+      <Box flexDirection="row" flexWrap="wrap" columnGap={2} paddingX={1} backgroundColor="#8080802e" borderStyle="round" borderColor="#80808066">
+        {items.map(item => (
+          <Text key={item.key} color={item.color} size="footnote">
+            {item.text}
+          </Text>
+        ))}
+      </Box>
+    )
+  })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const { Box, Text } = $.ui.resolve(e)
+    const band = await read($, info)
+    if (band === null) return <Text dimColor>Pasek pojawi się po pierwszej odpowiedzi.</Text>
+    const items = barItems(band, await $.clock.now())
+
+    return (
+      <Box flexDirection="column" paddingX={1} backgroundColor="#8080802e">
+        {items.map(item => (
+          <Text key={item.key} color={item.color}>
+            {item.text}
+          </Text>
+        ))}
       </Box>
     )
   })

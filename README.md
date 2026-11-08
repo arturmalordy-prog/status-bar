@@ -16,6 +16,8 @@ Wtyczka Claude Code, która nad polem czatu pokazuje stały pasek na lekko szary
 - ⚙️ **Subagenty działające w tle** (gdy są).
 - **✕ Ukryj** zwija pasek do przycisku **📊 Pokaż pasek**.
 
+Na telefonie i w przeglądarce (gdzie aplikacja nie rysuje paska nad polem czatu) pasek pojawia się jako ostatni wiersz rozmowy po każdej odpowiedzi; komenda `/pasek` otwiera go w panelu.
+
 Limity pojawiają się po pierwszej odpowiedzi modelu w sesji (tylko przy subskrypcji).
 
 ## Instalacja

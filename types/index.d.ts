@@ -20,6 +20,6 @@ export type BandInfo = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'status-bar': { info: BandInfo | null; isHidden: boolean; warned: string[] }
+    'status-bar': { info: BandInfo | null; isHidden: boolean; warned: string[]; row: number }
   }
 }
