@@ -1,0 +1,5 @@
+{
+  "name": "status-bar",
+  "owner": { "name": "Artur Malordy" },
+  "plugins": [{ "name": "status-bar", "source": "./" }]
+}
