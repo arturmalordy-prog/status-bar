@@ -1,6 +1,6 @@
 {
   "name": "status-bar",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Pasek nad polem czatu: zużycie sesji (5h) i tygodniowe, kontekst, środowisko, model i effort",
   "author": { "name": "Artur Malordy" },
   "license": "MIT",

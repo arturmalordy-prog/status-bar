@@ -5,15 +5,11 @@ description: Pokazuje pasek statusu sesji Claude Code — zużycie limitu 5h i t
 
 # Pasek statusu (status-bar)
 
-Wtyczka status-bar dołącza do każdej wiadomości użytkownika ukryty blok zaczynający się od `[status-bar]`. Zawiera on pole `linijka` z aktualnymi danymi sesji, zebranymi przez silnik Claude Code w chwili wysłania wiadomości.
-
-## Na każdą odpowiedź
-
-Gdy blok `[status-bar]` jest obecny, zakończ odpowiedź dla użytkownika jedną osobną linijką skopiowaną dokładnie z pola `linijka`, poprzedzoną pustą linią. Nie zmieniaj jej i nie komentuj. Linijka idzie tylko w ostatniej wiadomości tury, nie w komunikatach pośrednich przed użyciem narzędzi.
+Wtyczka status-bar rysuje pasek nad polem czatu w terminalu i w lokalnych sesjach aplikacji desktop, na żywo i bez zużycia tokenów. Ten skill działa tylko na prośbę: gdy użytkownik wywoła go (`/status-bar:status`, „status”, „pasek”), wtyczka dołącza do tej jednej wiadomości blok `[status-bar]` z polem `linijka`.
 
 ## Na prośbę o status
 
-Gdy użytkownik prosi o status, rozpisz `linijka` jako listę, każda pozycja w osobnym wierszu z jej ikoną:
+Rozpisz `linijka` jako listę, każda pozycja w osobnym wierszu z jej ikoną:
 
 - 🟢/🟡/🔴 **5h** — limit sesji; zielony < 70%, żółty od 70%, czerwony od 90%; `↻` to czas do resetu
 - 📅 **Tydzień** — limit tygodniowy

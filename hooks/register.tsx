@@ -142,10 +142,6 @@ async function refresh($: EngineInterface, patch: Partial<BandInfo>): Promise<vo
   await warnLimits($, usage.rateLimits)
 }
 
-const FOOTER_RULE =
-  'Zakończ swoją odpowiedź dla użytkownika (ostatnią wiadomość tej tury) jedną osobną linijką statusu, ' +
-  'poprzedzoną pustą linią, skopiowaną dokładnie z pola „linijka”. Nie komentuj jej.'
-
 export const register: Register = on => {
   let turnStartedAt = 0
   let turnTools = 0
@@ -163,12 +159,13 @@ export const register: Register = on => {
     return result
   })
 
+  // Only when asked: the status block costs tokens, so it rides one prompt alone.
   on('prompt.submit', async ($, e, next) => {
-    const band = await read($, info)
+    const isAsked = e.command?.name === 'status-bar:status' || /(^|\s)(status|pasek)(\s|$|[?!.])/i.test(e.text)
+    const band = isAsked ? await read($, info) : null
     if (band === null) return next(e)
     const line = barItems(band, await $.clock.now()).map(i => i.text).join('  ')
-    const block = `[status-bar] Aktualny status sesji.\nlinijka: ${line}\n${FOOTER_RULE}`
-    return next({ ...e, context: [...(e.context ?? []), block] })
+    return next({ ...e, context: [...(e.context ?? []), `[status-bar] Aktualny status sesji.\nlinijka: ${line}`] })
   })
 
   on('command.run', { command: 'pasek' }, async $ => {
