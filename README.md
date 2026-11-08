@@ -1,15 +1,22 @@
 # status-bar
 
-Wtyczka Claude Code, która nad polem czatu pokazuje stały pasek:
+Wtyczka Claude Code, która nad polem czatu pokazuje stały pasek na lekko szarym, półprzezroczystym tle:
 
 ```
-Sesja (5h): 23% (reset 2h 10m) · Tydzień: 41% (reset 3d 5h) · Kontekst: 18% · Środowisko: chmura · cloud_default · mobile · Model: claude-opus-5-5 · Effort: medium
+🟢 5h 23% ↻2h 10m  📅 Tydz. 41% ↻3d 5h  🧠 Kontekst 18%  ☁️ chmura · cloud_default · mobile
+🌿 artur-01-repository · main  🤖 claude-opus-5-5 ⚡medium  ⏱️ 1h 25m · 💬 14  🔄 48s · 🔧 7  ⚙️ 1 w tle  ✕ Ukryj
 ```
 
-- **Sesja (5h)** i **Tydzień**: wykorzystanie limitów konta i czas do resetu (widoczne po pierwszej odpowiedzi modelu; tylko przy subskrypcji).
-- **Kontekst**: zapełnienie okna kontekstu.
-- **Środowisko**: `lokalnie` albo `chmura` z typem środowiska i aplikacją.
-- **Model** i **Effort**: odświeżane przy każdym zapytaniu.
+- 🟢/🟡/🔴 **5h**, 📅 **Tydz.**, 🧠 **Kontekst**: wykorzystanie limitów i kontekstu z czasem do resetu; kolor zielony < 70%, żółty od 70%, czerwony od 90%. Po przekroczeniu 90% limitu pojawia się jednorazowe powiadomienie.
+- ☁️/💻 **Środowisko**: chmura (typ środowiska, aplikacja) albo lokalnie.
+- 🌿 **Repozytorium i gałąź git**.
+- 🤖 **Model** i ⚡ **effort**.
+- ⏱️ **Czas sesji** i 💬 **liczba wiadomości**.
+- 🔄 **Ostatnia tura**: czas odpowiedzi i 🔧 liczba użytych narzędzi.
+- ⚙️ **Subagenty działające w tle** (gdy są).
+- **✕ Ukryj** zwija pasek do przycisku **📊 Pokaż pasek**.
+
+Limity pojawiają się po pierwszej odpowiedzi modelu w sesji (tylko przy subskrypcji).
 
 ## Instalacja
 
